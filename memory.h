@@ -45,14 +45,16 @@ extern Segment_t * segmenttable;
 void        initialize () ;
 void      * mymalloc   ( size_t  ) ;
 void        myfree     ( void *  ) ;
-void        mydefrag   ( void ** ) ;
+void        mydefrag   () ;
 
 // forward references, managing segmentation table
 Segment_t * findFree    ( Segment_t *, size_t      ) ;
 void        insertAfter ( Segment_t *, Segment_t * ) ;
-Segment_t * createInstance() ; 
+Segment_t * createInstance() ;
+void deleteMemoryEntries(size_t size, int index);
 
 // forward references, helper functions
+int rearrangeStartPtrs(Segment_t* Seg,void *start);
 Segment_t * findSegment ( Segment_t * list, void * ptr );
 int isPrintable ( int c ) ;
 void printmemory (Byte mymemory []) ;

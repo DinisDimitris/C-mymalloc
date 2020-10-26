@@ -7,6 +7,7 @@
 
 
 // our memory
+// Changed variable name to kMAXMEM because I had a weird error
 Byte mymemory [kMAXMEM] ;
 Segment_t* segmenttable = NULL;
 int InstanceCount = 0;
@@ -27,6 +28,7 @@ void initialize ()
 	// Segment Descriptor that descirbes the whole memory
 	SegmentDescriptor->allocated = FALSE;
 	
+	// First segment is memory descriptor
         segmenttable->next = SegmentDescriptor;
 
 }	
@@ -37,9 +39,12 @@ void initialize ()
 Segment_t * createInstance(size_t size){
   // keep track of head of list
   Segment_t * head = segmenttable;
+  // initialize segment
   Segment_t * SegmentDescriptor = NULL;
   SegmentDescriptor = (struct segmentdescriptor *)malloc(sizeof(struct segmentdescriptor));
+  // size is what is passed in parameter
   SegmentDescriptor->size = size;
+  // increase number of instances created
   InstanceCount += 1;
   // link with the previous segment
   for (int i = 0; i < InstanceCount - 1; i++){
@@ -49,6 +54,7 @@ Segment_t * createInstance(size_t size){
   
   // next node of our last is our new node
   segmenttable->next = SegmentDescriptor;
+  //return to head
   segmenttable = head;
   return SegmentDescriptor;
 
@@ -56,26 +62,20 @@ Segment_t * createInstance(size_t size){
 
 void * mymalloc ( size_t size )
 {
+
    Segment_t* SegmDescriptor = segmenttable->next;
    Segment_t* AllocateSegm = findFree(segmenttable, size);
    if (AllocateSegm != NULL){
      //Allocate the segment at the point where memory is free by getting offset of 1024 - sum of our allocated  sizes
-     // Since we know that MemoryDescrriptor only contains segments which are allocated,
-     // We can get index of our first memory block by just substracting the sum of allocated sizes from 102
+     // Formula -> Index = MAXMEM - (MAXMEM - SUM(ALL SEGMENT SIZES) without the segment descriptor of course) 
+     // Here our SegmDescriptor contains all our current memory allocated so we can just kmaxmem from it
      int Offset = kMAXMEM - SegmDescriptor->size;
      AllocateSegm->start = &mymemory[Offset];
      // alocated memory slots
-     // I just put 1 instead of 0 on the allocated memory slots in the table
+     // I just put 1 instead of 0 on the allocated memory slots in the table so we know they are allocated
+     // of course they will be overiden by their actual value
      for(int i = 0; i < size; i++){
-	// mark head of segment
-	if ( i == 0){
-	mymemory[Offset + i] = '\2';
-	}
 
-	// mark tail of segment
-	if ( i == size - 1){
-	mymemory[Offset + i] = '\3';
-	}
 	mymemory[Offset + i] = '\1';
     }
     // alocate the segment
@@ -92,13 +92,11 @@ void myfree ( void * ptr )
    Segment_t* SegmDescriptor = segmenttable->next;
    Segment_t * Seg = findSegment(segmenttable, ptr);
    if (Seg != NULL){
-	// Free'd memory
+	// Add the freed memory back to our available memory
 	SegmDescriptor->size += Seg->size;
 	printf("You have free'd %ld bytes of memory \n", Seg->size);
 	// Free the segment
-	Seg->start = NULL;
 	Seg->allocated = FALSE;
-	Seg->size = 0;
 
    }
 
@@ -108,11 +106,77 @@ void myfree ( void * ptr )
 
 }
 
-void mydefrag ( void ** ptrlist)
+// In order to avoid multiple looping and pointer arithmetic
+// I simply delete the free segments, keeping track of their size
+// And I create a bigger segment at the end using CreateInstance
+// Containing the size of all free segments
+void mydefrag ()
 {
+   // Total size to allocate for the last segment created after defrag
+   size_t total_size = 0;
+   // keep track of head of list
+   Segment_t* head = segmenttable;
+   // Move once, to avoid deleting the memory descriptor 
+   segmenttable = segmenttable->next;
+   for (int i = 0; i < InstanceCount - 1; i++){
+	//keep track of previous segment
+	Segment_t* prev = segmenttable;
+	segmenttable = segmenttable->next;
+	// A free segment is one with allocated -> False
+	if (segmenttable->allocated == FALSE){
+	total_size += segmenttable->size;
+	// link previous segment with the one after the free one
+         prev->next = segmenttable->next;
+	rearrangeStartPtrs(segmenttable->next, segmenttable->start);
+	segmenttable->start = NULL;
+	// resume search
+	 segmenttable = prev;
+	 InstanceCount -= 1;
+	
+	}
+	
+   }
+   segmenttable = head;
    
+   
+   // new segment at the end , of size of all free memory segments
+   Segment_t* new_seg = createInstance(total_size);
+    printf("Defragmentation Succeeded -> your new segment is at the end of the list \n");
+   // NEW FREE SEGMENT
+   new_seg->allocated = FALSE;
+}
+
+int reprinteMemoryTable(Segment_t* CurrSegm, current_index){
+	if(Seg == NULL){
+	return -1;
+	}
+	else{
+		for(int i = 0; i < CurrSegm->size;i++){
+			mymemory[current_index + i] = 
+		}
+	}
 
 }
+
+// Rearange start pointers from the defragmented segment
+int rearrangeStartPtrs(Segment_t* Seg,void * start){
+	if(Seg == NULL){
+	return -1;
+	}
+
+	else{
+
+	// swap pointers, by keeping track of the current pointer
+	// basically temp = a 
+	// a = b
+	// b = temp
+	void * currentStart = Seg->start;
+	Seg->start = start;
+	rearrangeStartPtrs(Seg->next,currentStart);
+	}
+}
+
+
 
 
 // helper functions for management segmentation table
@@ -145,9 +209,13 @@ Segment_t * findSegment ( Segment_t * list, void * ptr )
 {
   // Pointer so we dont modify the value in the iterations
   Segment_t* head = list->next;
+  size_t size = 0;
   for (int i = 0; i < InstanceCount - 1; i++){
 	head = head->next;
+	int index = 1024 - (1024 - size);
+	size += head->size;
 	if ( head->start == ptr){
+
 		// Found segment
 		return head;
 	}
@@ -164,6 +232,7 @@ int isPrintable ( int c )
    return 0 ;
 }
 
+// print memory as a table
 void printmemory (Byte mymemory []){
 int next_row = 10;
 
@@ -183,6 +252,7 @@ int next_row = 10;
  }
 }
 
+// recursive function to print the segments
 int printsegmenttable(Segment_t * segmentTable, int Index )
 {
   if (segmentTable == NULL){
