@@ -39,7 +39,7 @@ typedef struct segmentdescriptor {
 
 
 extern Segment_t * segmenttable;
-
+extern Segment_t * last_el;
 
 // forward references, user interface
 void        initialize () ;
@@ -48,10 +48,12 @@ void        myfree     ( void *  ) ;
 void        mydefrag   () ;
 
 // forward references, managing segmentation table
-Segment_t * findFree    ( Segment_t *, size_t      ) ;
+Segment_t * findFree    ( Segment_t * ,size_t  ) ;
 void        insertAfter ( Segment_t *, Segment_t * ) ;
 Segment_t * createInstance() ;
 void deleteMemoryEntries(size_t size, int index);
+void DumpHex(const void* data, size_t size);
+int getIndex(void * ptr);
 
 // forward references, helper functions
 int rearrangeStartPtrs(Segment_t* Seg,void *start);
