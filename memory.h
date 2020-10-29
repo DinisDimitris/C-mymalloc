@@ -21,6 +21,7 @@
 #define kMAXSEGMENTS   100
 
 
+
 // this typedef defines a byte
 typedef unsigned char Byte ;
 
@@ -54,7 +55,7 @@ Segment_t * createInstance() ;
 void deleteMemoryEntries(size_t size, int index);
 void DumpHex(const void* data, size_t size);
 int getIndex(void * ptr);
-
+void swap(Segment_t* segment, Segment_t* nextSeg);
 // forward references, helper functions
 int rearrangeStartPtrs(Segment_t* Seg,void *start);
 Segment_t * findSegment ( Segment_t * list, void * ptr );

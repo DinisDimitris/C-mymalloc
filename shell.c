@@ -29,34 +29,30 @@ strcpy	(ptr2, "My name is Shrek \n");
 printf("Content of ptr2: %s\n",ptr2);
 
 printf("Memory left after second allocation: %lu\n",memoryDescriptor->size);
-char* ptr3 = mymalloc(sizeof(char)*150);
+char* ptr3 = mymalloc(sizeof(char)*126);
 
 strcpy(ptr3, "A monkey will eventually write Romeo & Juliet given a typewriter and enough time by pressing random buttons on the typewriter");
 
 printf("Content of ptr3: %s\n",ptr3);
 
 printf("Memory left after third allocation: %lu\n",memoryDescriptor->size);
-// free function
+
+
 myfree(ptr1);
 myfree(ptr2);
+void *ptrlist[kMAXSEGMENTS] = {ptr1,ptr2,ptr3};
 
-// int array
-int* ptr4 = mymalloc(sizeof(int)*10);
+// mydefrag
+// 2nd parameter is size of ptrlist
+mydefrag(ptrlist,3);
 
-printf("Content of ptr4 :");
-for (int i =0; i< 10; i++){
- ptr4[i] = i;
- printf(" %i ", ptr4[i]);
-}
-printf("\n");
-printf("Memory left after fourth allocation: %lu\n",memoryDescriptor->size);
+char* ptr4 = mymalloc(sizeof(char)*40);
+strcpy(ptr4, "My name is Shrek \n");
 
-char* ptr5 = mymalloc(sizeof(char)*20);
-strcpy(ptr5,"alalal");
 
-char* ptr6 = mymalloc(sizeof(char)*20);
-strcpy(ptr6,"alalal");
-// occupy segment after defrag
+char* ptr5 = mymalloc(sizeof(char)*40);
+strcpy(ptr5, "Puss in the boots \n");
+
 
 printf("Total memoroy available: %ld bytes\n", memoryDescriptor->size);
 // Keep track of segments
