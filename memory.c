@@ -155,17 +155,12 @@ void mydefrag(void ** ptrlist, int count){
 			Segment_t* nextNextSeg = nextSeg->next;
 			segment->next = nextNextSeg;
 			segment->size += nextSeg->size;
-			for (int ptrCount = 0; ptrCount > count - i; ptrCount++){
-				ptrlist[i + ptrCount + 1] = ptrlist[i + ptrCount];
-			}
 			count -= 1;
 			InstanceCount -= 1;
-			// next loop should start from the same segment
-			checkStart = 0;
 			
 		}
 		// second case, swap the segments
-		if ( segment->allocated == FALSE && nextSeg->allocated == TRUE){
+		if (segment->allocated == FALSE && nextSeg->allocated == TRUE){
 			
 			// get index in memory entry
 			int seg1Entry = getIndex(segment->start);
@@ -184,15 +179,10 @@ void mydefrag(void ** ptrlist, int count){
 			nextSeg->start = &mymemory[nextSeg->size];
 			// swap the segments (or just change their attributes, same thing)
 			swap(segment,nextSeg);
-			// swap reference pointers
-			void * temp = ptrlist[i];
-			ptrlist[i] = ptrlist[i + 1];
-			ptrlist[i + 1] = temp;
+			ptrlist[i - 1] = segment->start;
+			ptrlist[i] = nextSeg->start;
 			checkStart = 1;
 
-		}
-		if(checkStart == 1){
-		segment = segment->next;
 		}
 	} // first if
 	loopcnt+= 1;

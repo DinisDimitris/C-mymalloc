@@ -9,49 +9,55 @@ int main(){
 printf ("shell> start\n");
 
 initialize();
-Segment_t* memoryDescriptor = segmenttable->next;
+Segment_t* memoryDescriptor = segmenttable->next; 
 
-// Last element of array is marked by '\0' 
+// our ptrlist
+void * ptrlist[kMAXSEGMENTS];
 
+
+// I declare my references to malloc inside the ptrlist 
+// Because in defrag, I have to use the actual pointer value, not the copy
 // First segment allocated
-char* ptr1 = mymalloc(sizeof(char)*20);
+ptrlist[0] = mymalloc(sizeof(char)*30);
 
-memoryDescriptor->start = &ptr1;
+// Link segmenttable to first segment allocated
+memoryDescriptor->start = &ptrlist[0];
+
+strcpy(ptrlist[0], "I am groot\n");
+
+printf("Content of ptr1: %s\n",(char*)ptrlist[0]);
+
 printf("Memory left after first allocation: %lu\n",memoryDescriptor->size);
 
-strcpy(ptr1, "I am groot\n");
+ptrlist[1] = mymalloc(sizeof(char)*30);
+strcpy	(ptrlist[1], "My name is Shrek \n");
 
-printf("Content of ptr1: %s\n",ptr1);
-
-char* ptr2 = mymalloc(sizeof(char)*20);
-strcpy	(ptr2, "My name is Shrek \n");
-
-printf("Content of ptr2: %s\n",ptr2);
+printf("Content of ptr2: %s\n",(char*)ptrlist[1]);
 
 printf("Memory left after second allocation: %lu\n",memoryDescriptor->size);
-char* ptr3 = mymalloc(sizeof(char)*126);
+ptrlist[2] = mymalloc(sizeof(char)*126);
 
-strcpy(ptr3, "A monkey will eventually write Romeo & Juliet given a typewriter and enough time by pressing random buttons on the typewriter");
+strcpy(ptrlist[2], "A monkey will eventually write Romeo & Juliet given a typewriter and enough time by pressing random buttons on the typewriter");
 
-printf("Content of ptr3: %s\n",ptr3);
+printf("Content of ptr3: %s\n",(char*)ptrlist[2]);
 
 printf("Memory left after third allocation: %lu\n",memoryDescriptor->size);
 
-
-myfree(ptr1);
-myfree(ptr2);
-void *ptrlist[kMAXSEGMENTS] = {ptr1,ptr2,ptr3};
+// call free function
+myfree(ptrlist[0]);
+myfree(ptrlist[1]);
+// also have to set ptr to null 
+ptrlist[0] = NULL;
+ptrlist[1]= NULL;
 
 // mydefrag
-// 2nd parameter is size of ptrlist
+// to reduce size of for loop, 2nd param in mydefraag is the number of pointers in ptrlist
 mydefrag(ptrlist,3);
 
-char* ptr4 = mymalloc(sizeof(char)*40);
-strcpy(ptr4, "My name is Shrek \n");
-
-
-char* ptr5 = mymalloc(sizeof(char)*40);
-strcpy(ptr5, "Puss in the boots \n");
+// After defrag, our ptrlist[2] became ptrlist[0]
+// We start allocating again from ptrlist[1]
+ptrlist[1] = mymalloc(sizeof(char)*50);
+strcpy(ptrlist[1], "Adventure and fuss with Shrek & Puss in the boots");
 
 
 printf("Total memoroy available: %ld bytes\n", memoryDescriptor->size);
@@ -63,7 +69,8 @@ memoryDescriptor->size = InstanceCount -1;
 // Segment Table
 printsegmenttable(segmenttable->next, 0);
 
-//Uncomment to print the memory as a table
+//print the memory as a table
+// see header comment in memory.c for source code
 DumpHex(mymemory,1024);
 
 printf ( "shell> end\n");
